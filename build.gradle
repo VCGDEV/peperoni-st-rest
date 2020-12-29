@@ -2,6 +2,7 @@ plugins {
 	id 'org.springframework.boot' version '2.4.1'
 	id 'io.spring.dependency-management' version '1.0.10.RELEASE'
 	id 'java'
+	id 'jacoco'
 }
 
 group = 'com.vcgdev.store'
@@ -33,4 +34,57 @@ dependencies {
 
 test {
 	useJUnitPlatform()
+}
+
+
+def jacocoExclude = ['com/vcgdev/store/peperoni/PeperoniStRestApplication**']
+
+def jacocoExcludeVerification = ['com.vcgdev.store.peperoni.PeperoniStRestApplication**']
+
+jacoco {
+   toolVersion = '0.8.5'
+   reportsDir = file('$buildDir/reports/jacoco')
+}
+
+jacocoTestReport {
+   reports {
+      xml.enabled false
+      csv.enabled false
+      html.destination file("${buildDir}/jacoco")
+   }
+   
+   afterEvaluate {
+      classDirectories.setFrom(files(classDirectories.files.collect {
+         fileTree(dir: it,
+	                  exclude: jacocoExclude
+	 )
+      }))
+   }
+}
+
+jacocoTestCoverageVerification {
+   violationRules {
+      rule {
+	element = 'CLASS'
+	includes = ['com.vcgdev.store.peperoni.*']
+	excludes = jacocoExcludeVerification
+	limit {
+	   counter = 'LINE'
+	   value = 'COVEREDRATIO'
+	   minimum = 0.9
+	}
+      }
+
+      rule {
+	element = 'CLASS'
+	includes = ['com.vcgdev.store.peperoni.*']
+	excludes = jacocoExcludeVerification
+	limit {
+	   counter = 'BRANCH'
+	   value = 'COVEREDRATIO'
+	   minimum = 0.9
+	}
+      }
+   }
+
 }
