@@ -23,4 +23,7 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build with Gradle
+      env:
+              artifactory_user: ${{ secrets.ARTIFACTORY_USER }}
+              artifactory_password: ${{ secrets.ARTIFACTORY_PWD }}
       run: ./gradlew build jacocoTestCoverageVerification
