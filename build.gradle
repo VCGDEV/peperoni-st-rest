@@ -21,15 +21,36 @@ plugins {
 	id 'java'
 	id 'jacoco'
 }
+
+ext {
+    karateVersion = '0.9.6'
+}
+
 apply plugin: 'com.vcgdev.plugin'
 group = 'com.vcgdev.store'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '1.8'
 
+sourceSets {
+	integrationTest {
+		java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/integrationTest/java')
+        }
+		resources {
+            srcDir file('src/integrationTest/java')
+            exclude '**/*.java'
+        }
+	}
+}
+
 configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
 	}
+	integrationTestCompile.extendsFrom testCompile
+    integrationTestRuntime.extendsFrom testRuntime
 }
 
 repositories {
@@ -63,10 +84,39 @@ dependencies {
 	runtimeOnly 'com.h2database:h2'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
+
+	// karate integration
+	integrationTestCompile "com.intuit.karate:karate-junit5:${karateVersion}"
+    integrationTestCompile "com.intuit.karate:karate-apache:${karateVersion}"
+    integrationTestCompile "net.masterthought:cucumber-reporting:3.8.0"
 }
 
 test {
 	useJUnitPlatform()
+	outputs.upToDateWhen { false }
+}
+
+task integrationTest(type: Test) {
+    description = 'Runs integration tests.'
+    group = 'verification'
+
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+	outputs.upToDateWhen { false }
+
+}
+
+integrationTest {
+	useJUnitPlatform()
+	systemProperty "karate.options", System.properties.getProperty("karate.options")
+    systemProperty "karate.env", System.properties.getProperty("karate.env")
+	systemProperty "karate", project.findProperty("url")
+	outputs.upToDateWhen { false }
+}
+
+task karateDebug(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    main = 'com.intuit.karate.cli.Main'
 }
 
 
